@@ -108,6 +108,28 @@ end
 local key = ""
 local input = ""
 
+local function backSpace()
+  if #input > 0 then
+    input = string.sub(input, 1, #input - 1)
+  end
+end
+
+local function getPosition()
+  io.write("\027[6n")
+  io.flush()
+  u.waitForSingleKey()
+end
+
+local function textInput(text)
+  local i = #input
+  input = input .. text
+  i = #input - i
+end
+
+local iModeOps = {}
+iModeOps[127] = backSpace -- backSpace
+iModeOps[7] = getPosition -- ctrl+"g"
+
 local function render()
   u.refreshScreen()
   local s = string.byte(key, 1, 1)
@@ -125,8 +147,12 @@ local function render()
       io.write("Added New task\n\n")
       renderList()
       input = ""
+    elseif iModeOps[s] == nil
+    then
+      textInput(key)
+      -- input = input .. key
     else
-      input = input .. key
+      iModeOps[s]()
     end
     io.write(input)
   else
