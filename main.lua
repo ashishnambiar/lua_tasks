@@ -109,33 +109,39 @@ local key = ""
 local input = ""
 local inputCurPos = 0
 
-local function backSpace()
-  if #input > 0 then
-    input = string.sub(input, 1, #input - 1)
-    inputCurPos = inputCurPos - 1
-  end
-end
-
 local function cursorLeft()
   if #input > 0 and inputCurPos > 0 then
     inputCurPos = inputCurPos - 1
+  elseif inputCurPos < 0 then
+    inputCurPos = 0
   end
 end
-
 
 local function cursorRight()
   if #input > 0 and inputCurPos < #input then
     inputCurPos = inputCurPos + 1
+  elseif inputCurPos > #input then
+    inputCurPos = #input
+  end
+end
+
+
+local function backSpace()
+  if #input > 0 and inputCurPos > 0 then
+    input = string.sub(input, 1, inputCurPos - 1) .. string.sub(input, inputCurPos + 1, #input)
+    cursorLeft()
   end
 end
 
 local function textInput(text)
   local i = #input
-  input = input .. text
+  input = string.sub(input, 1, inputCurPos) .. text .. string.sub(input, inputCurPos + 1, #input)
   i = #input - i
   inputCurPos = inputCurPos + i
   if inputCurPos > #input then
     inputCurPos = #input
+  elseif inputCurPos < 1 then
+    inputCurPos = 0
   end
 end
 
@@ -172,7 +178,8 @@ local function render()
       iModeOps[s]()
     end
     io.write(input)
-    io.write("\n\n" .. string.sub(input, 1, inputCurPos) .. "<->" .. string.sub(input, inputCurPos + 1, #input))
+    io.write("\n\n" .. string.sub(input, 1, inputCurPos) .. "<->" .. string.sub(input, inputCurPos + 1, #input) .. "\n")
+    io.write("pos: " .. inputCurPos)
     setCursor()
   else
     if keyPressed[s] ~= nil
