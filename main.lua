@@ -107,28 +107,46 @@ end
 
 local key = ""
 local input = ""
+local inputCurPos = 0
 
 local function backSpace()
   if #input > 0 then
     input = string.sub(input, 1, #input - 1)
+    inputCurPos = inputCurPos - 1
   end
 end
 
-local function getPosition()
-  io.write("\027[6n")
-  io.flush()
-  u.waitForSingleKey()
+local function cursorLeft()
+  if #input > 0 and inputCurPos > 0 then
+    inputCurPos = inputCurPos - 1
+  end
+end
+
+
+local function cursorRight()
+  if #input > 0 and inputCurPos < #input then
+    inputCurPos = inputCurPos + 1
+  end
 end
 
 local function textInput(text)
   local i = #input
   input = input .. text
   i = #input - i
+  inputCurPos = inputCurPos + i
+  if inputCurPos > #input then
+    inputCurPos = #input
+  end
+end
+
+local function setCursor()
+  io.write("\027[2;" .. inputCurPos + 1 .. "H")
 end
 
 local iModeOps = {}
-iModeOps[127] = backSpace -- backSpace
-iModeOps[7] = getPosition -- ctrl+"g"
+iModeOps[127] = backSpace  -- backSpace
+iModeOps[8] = cursorLeft   -- ctrl+"h"
+iModeOps[12] = cursorRight -- ctrl+"l"
 
 local function render()
   u.refreshScreen()
@@ -150,11 +168,12 @@ local function render()
     elseif iModeOps[s] == nil
     then
       textInput(key)
-      -- input = input .. key
     else
       iModeOps[s]()
     end
     io.write(input)
+    io.write("\n\n" .. string.sub(input, 1, inputCurPos) .. "<->" .. string.sub(input, inputCurPos + 1, #input))
+    setCursor()
   else
     if keyPressed[s] ~= nil
     then
