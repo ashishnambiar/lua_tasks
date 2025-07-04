@@ -1,41 +1,4 @@
-local function refreshScreen()
-  io.write("\027[0;0H")
-  io.write("\027[0J")
-end
-
-local function waitForSingleKey()
-  os.execute("stty -icanon") -- put TTY in raw mode
-  local answer = io.read(1)
-  os.execute("stty icanon")  -- at end of program, put TTY back to normal mode
-  io.write("\027[1F\r")
-  io.write("\027[0J")
-  return answer
-end
-
-local function waitForInput()
-  local a = io.read()
-  io.write("\027[1F\r")
-  io.write("\027[0J")
-  return a
-end
-
-
-local function waitForAnswer(query)
-  io.write(query .. "\n")
-  io.flush()
-  local answer = waitForSingleKey()
-  io.write("\027[1F\r")
-  io.write("\027[0J")
-  return answer
-end
-
-local function quit()
-  refreshScreen()
-  io.write("\027[?1049l")
-  io.write("QUITING APPLICATION!\n")
-  os.exit()
-end
-
+local u = require "utils"
 --[[
  ____ _____  _    ____ _____   _   _ _____ ____  _____
 / ___|_   _|/ \  |  _ \_   _| | | | | ____|  _ \| ____|
@@ -57,10 +20,10 @@ local tasks = {
 
 local function curPosNew(i)
   curPos = i
-  if curPos < 1 then
-    curPos = 1
-  elseif curPos > #tasks then
+  if curPos > #tasks then
     curPos = #tasks
+  elseif curPos < 1 then
+    curPos = 1
   end
 end
 
@@ -77,7 +40,6 @@ local function curPosDown()
   curPosNew(curPos + 1)
 end
 
-
 local function addTask(
     task --[[string]],
     done --[[boolean]]
@@ -87,6 +49,7 @@ local function addTask(
     done = done,
   }
 end
+
 local function toggleTask()
   local i = curPos
   tasks[i].done = not tasks[i].done
@@ -101,19 +64,19 @@ end
 
 local function changeMode(mode)
   return function()
-    refreshScreen()
+    u.refreshScreen()
     io.write("Changing mode to " .. mode .. "\n")
     currentMode = mode
   end
 end
 
 local keyPressed = {}
-keyPressed[113] = quit            -- "q"
-keyPressed[81] = quit             -- "Q"
+keyPressed[113] = u.quit          -- "q"
+keyPressed[81] = u.quit           -- "Q"
 
-keyPressed[114] = refreshScreen   -- "r"
-keyPressed[82] = refreshScreen    -- "R"
-keyPressed[12] = refreshScreen    -- ctrl+"l"
+keyPressed[114] = u.refreshScreen -- "r"
+keyPressed[82] = u.refreshScreen  -- "R"
+keyPressed[12] = u.refreshScreen  -- ctrl+"l"
 
 keyPressed[105] = changeMode("i") -- "i"
 keyPressed[27] = changeMode("n")  -- "esc"
@@ -127,11 +90,11 @@ keyPressed[103] = curStart        -- "g"
 keyPressed[71] = curEnd           -- "G"
 
 keyPressed[120] = toggleTask      -- "x"
-keyPressed[100] = deleteTask      -- "d"
+keyPressed[68] = deleteTask       -- "D"
 
 addTask("New Task", false)
 addTask("Another Task", true)
-addTask("Some Task", false)
+addTask("Some Task 1", false)
 addTask("Some Task 2", false)
 
 local function renderList()
@@ -146,7 +109,7 @@ local key = ""
 local input = ""
 
 local function render()
-  refreshScreen()
+  u.refreshScreen()
   local s = string.byte(key, 1, 1)
 
   -- io.write(key, " -> ", s, "\n")
@@ -157,11 +120,11 @@ local function render()
     io.write("IN INSERT MODE\n")
     if s == 27 or s == 10 then
       keyPressed[s]()
-      io.write("ESCAPING\n")
       addTask(input, false)
+      u.refreshScreen()
+      io.write("Added New task\n\n")
+      renderList()
       input = ""
-    elseif s == 14 then
-      io.write("other things")
     else
       input = input .. key
     end
@@ -177,23 +140,25 @@ local function render()
     renderList()
     io.write("\027[0;0H")
   end
+
   ::continue::
 end
 
 local function main()
+  renderList()
   while true
   do
-    key = waitForSingleKey()
+    key = u.waitForSingleKey()
     render()
   end
 
-  waitForSingleKey()
+  u.waitForSingleKey()
 end
 
 
 io.write("\027[?1049h")
 
-refreshScreen()
+u.refreshScreen()
 
 main()
 
