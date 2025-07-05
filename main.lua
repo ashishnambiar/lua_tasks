@@ -112,7 +112,7 @@ local inputCurPos = 0
 local function cursorLeft()
   if #input > 0 and inputCurPos > 0 then
     inputCurPos = inputCurPos - 1
-  elseif inputCurPos < 0 then
+  else
     inputCurPos = 0
   end
 end
@@ -125,6 +125,17 @@ local function cursorRight()
   end
 end
 
+local function cursorStart()
+  if #input > 0 then
+    inputCurPos = 0
+  end
+end
+
+local function cursorEnd()
+  if #input > 0 then
+    inputCurPos = #input
+  end
+end
 
 local function backSpace()
   if #input > 0 and inputCurPos > 0 then
@@ -153,6 +164,8 @@ local iModeOps = {}
 iModeOps[127] = backSpace  -- backSpace
 iModeOps[8] = cursorLeft   -- ctrl+"h"
 iModeOps[12] = cursorRight -- ctrl+"l"
+iModeOps[1] = cursorStart  -- ctrl+"a"
+iModeOps[5] = cursorEnd    -- ctrl+"e"
 
 local function render()
   u.refreshScreen()
@@ -178,7 +191,7 @@ local function render()
       iModeOps[s]()
     end
     io.write(input)
-    io.write("\n\n" .. string.sub(input, 1, inputCurPos) .. "<->" .. string.sub(input, inputCurPos + 1, #input) .. "\n")
+    io.write("\n\n|" .. string.sub(input, 1, inputCurPos) .. "<->" .. string.sub(input, inputCurPos + 1, #input) .. "|\n")
     io.write("pos: " .. inputCurPos)
     setCursor()
   else
