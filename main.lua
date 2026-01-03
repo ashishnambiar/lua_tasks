@@ -1,12 +1,5 @@
 local u = require "utils"
---[[
- ____ _____  _    ____ _____   _   _ _____ ____  _____
-/ ___|_   _|/ \  |  _ \_   _| | | | | ____|  _ \| ____|
-\___ \ | | / _ \ | |_) || |   | |_| |  _| | |_) |  _|
- ___) || |/ ___ \|  _ < | |   |  _  | |___|  _ <| |___
-|____/ |_/_/   \_\_| \_\|_|   |_| |_|_____|_| \_\_____|
---]]
---
+local f = require "file"
 
 local modes = {
   n = "normal",
@@ -48,6 +41,7 @@ local function addTask(
     data = task,
     done = done,
   }
+  f.writeToFile()
 end
 
 local function toggleTask()
@@ -70,28 +64,33 @@ local function changeMode(mode)
   end
 end
 
-local keyPressed = {}
-keyPressed[113] = u.quit          -- "q"
-keyPressed[81] = u.quit           -- "Q"
+--- ## Normal Key Press Operations
+---
+--- These are general key press operations that mainly apply to normal mode of
+--- the program.
+local keyPressed = {
+  [113] = u.quit,          -- "q"
+  [81] = u.quit,           -- "Q"
 
-keyPressed[114] = u.refreshScreen -- "r"
-keyPressed[82] = u.refreshScreen  -- "R"
-keyPressed[12] = u.refreshScreen  -- ctrl+"l"
+  [114] = u.refreshScreen, -- "r"
+  [82] = u.refreshScreen,  -- "R"
+  [12] = u.refreshScreen,  -- ctrl+"l"
 
-keyPressed[105] = changeMode("i") -- "i"
-keyPressed[27] = changeMode("n")  -- "esc"
-keyPressed[10] = changeMode("n")  -- "enter"
+  [105] = changeMode("i"), -- "i"
+  [27] = changeMode("n"),  -- "esc"
+  [10] = changeMode("n"),  -- "enter"
 
-keyPressed[106] = curPosDown      -- "j"
-keyPressed[107] = curPosUp        -- "k"
+  [106] = curPosDown,      -- "j"
+  [107] = curPosUp,        -- "k"
 
-keyPressed[107] = curPosUp        -- "k"
-keyPressed[103] = curStart        -- "g"
-keyPressed[71] = curEnd           -- "G"
+  [103] = curStart,        -- "g"
+  [71] = curEnd,           -- "G"
 
-keyPressed[120] = toggleTask      -- "x"
-keyPressed[68] = deleteTask       -- "D"
+  [120] = toggleTask,      -- "x"
+  [68] = deleteTask,       -- "D"
+}
 
+--[TODO: Remove] some Placeholder tasks
 addTask("New Task", false)
 addTask("Another Task", true)
 addTask("Some Task 1", false)
@@ -160,12 +159,18 @@ local function setCursor()
   io.write("\027[2;" .. inputCurPos + 1 .. "H")
 end
 
-local iModeOps = {}
-iModeOps[127] = backSpace  -- backSpace
-iModeOps[8] = cursorLeft   -- ctrl+"h"
-iModeOps[12] = cursorRight -- ctrl+"l"
-iModeOps[1] = cursorStart  -- ctrl+"a"
-iModeOps[5] = cursorEnd    -- ctrl+"e"
+
+--- ## INSERT Mode Operations
+---
+--- These are the operations that can be performed in insert mode
+--- Most of them are text manipulation and cursor movement operations
+local iModeOps = {
+  [127] = backSpace,  -- backSpace
+  [8] = cursorLeft,   -- ctrl+"h"
+  [12] = cursorRight, -- ctrl+"l"
+  [1] = cursorStart,  -- ctrl+"a"
+  [5] = cursorEnd,    -- ctrl+"e"
+}
 
 local function render()
   u.refreshScreen()
